@@ -69,19 +69,21 @@ document.getElementById("submitButton").textContent = "Update Enquiry";
 
         const enquiryData = {
 
-            enquiry_number: document.getElementById("enquiryNo").value,
+            enquiry_no: document.getElementById("enquiryNo").value,
 
             enquiry_date: document.getElementById("enquiryDate").value,
 
             company_name: document.getElementById("companyName").value,
 
-            phone_no: document.getElementById("mobileNo").value,
+            mobile_no: document.getElementById("mobileNo").value,
 
             lead_source: document.getElementById("leadSource").value,
 
             enquiry_category: document.getElementById("enquiryCategory").value
 
         };
+        console.log("Enquiry Data:", enquiryData);
+console.table(enquiryData);
 
         try {
 
@@ -133,7 +135,7 @@ document.getElementById("submitButton").textContent = "Update Enquiry";
             }
 
             // Return to Enquiry List
-            window.location.href = "/";
+            window.location.href = "/enquiry";
 
         } catch (error) {
 
