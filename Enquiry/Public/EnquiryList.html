@@ -1,0 +1,43 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enquiry List</title>
+</head>
+<body>
+
+    <center>
+        <h2>Enquiry List</h2>
+    </center>
+
+    <div style="text-align: right; margin-bottom: 15px;">
+        <button onclick="createEnquiry()">
+            + Create Enquiry
+        </button>
+    </div>
+
+    <table border="1" width="100%" cellpadding="10">
+        <thead>
+            <tr>
+                <th>Enquiry No</th>
+                <th>Enquiry Date</th>
+                <th>Company Name</th>
+                <th>Mobile No</th>
+                <th>Lead Source</th>
+                <th>Enquiry Category</th>
+                <th>Update</th>
+<th>Delete</th>
+            </tr>
+        </thead>
+
+        <tbody id="enquiryTableBody">
+            <!-- Enquiry records will appear here -->
+        </tbody>
+    </table>
+
+    <script src="EnquiryList.js"></script>
+
+</body>
+</html>
