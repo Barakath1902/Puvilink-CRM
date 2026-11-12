@@ -154,6 +154,28 @@ app.get("/create-quotation", (req, res) => {
     res.sendFile(quotationFile);
 });
 
+
+app.get("/debug-db", (req, res) => {
+    let databaseHost = "Unable to read DATABASE_URL";
+
+    try {
+        if (process.env.DATABASE_URL) {
+            databaseHost = new URL(
+                process.env.DATABASE_URL
+            ).hostname;
+        }
+    } catch (error) {
+        databaseHost = "Invalid DATABASE_URL format";
+    }
+
+    res.json({
+        databaseUrlPresent: !!process.env.DATABASE_URL,
+        databaseHost: databaseHost,
+        connectionFile: require.resolve("./db")
+    });
+});
+
+
 // ==========================================
 // TEST DATABASE CONNECTION
 // ==========================================
