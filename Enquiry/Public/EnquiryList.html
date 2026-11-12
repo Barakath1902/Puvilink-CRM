@@ -1,27 +1,28 @@
 
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Enquiry List</title>
 </head>
+
 <body>
+
+    <h2>Enquiry List</h2>
+
     <button onclick="window.location.href='/'">
-    Back to Home
-</button>
+        Back to Home
+    </button>
 
-    <center>
-        <h2>Enquiry List</h2>
-    </center>
+    <button onclick="window.location.href='/create-enquiry'">
+        Create Enquiry
+    </button>
 
-    <div style="text-align: right; margin-bottom: 15px;">
-        <button onclick="createEnquiry()">
-            + Create Enquiry
-        </button>
-    </div>
+    <br><br>
 
-    <table border="1" width="100%" cellpadding="10">
+    <table border="1" cellpadding="8">
+
         <thead>
             <tr>
                 <th>Enquiry No</th>
@@ -31,13 +32,12 @@
                 <th>Lead Source</th>
                 <th>Enquiry Category</th>
                 <th>Update</th>
-<th>Delete</th>
+                <th>Delete</th>
             </tr>
         </thead>
 
-        <tbody id="enquiryTableBody">
-            <!-- Enquiry records will appear here -->
-        </tbody>
+        <tbody id="enquiryTableBody"></tbody>
+
     </table>
 
     <script src="EnquiryList.js"></script>
