@@ -186,7 +186,7 @@ app.get("/get-enquiries", async (req, res) => {
                 mobile_no,
                 lead_source,
                 enquiry_category
-            FROM public.enquiry
+            FROM public.enquiries
             ORDER BY enquiry_no DESC
         `;
 
@@ -218,7 +218,7 @@ app.get("/get-enquiry/:enquiry_no", async (req, res) => {
                 mobile_no,
                 lead_source,
                 enquiry_category
-            FROM public.enquiry
+            FROM public.enquiries
             WHERE enquiry_no = $1
         `;
 
@@ -276,7 +276,7 @@ app.post("/save-enquiry", async (req, res) => {
         }
 
         const sql = `
-            INSERT INTO public.enquiry (
+            INSERT INTO public.enquiries (
                 enquiry_no,
                 enquiry_date,
                 company_name,
@@ -329,7 +329,7 @@ app.put("/update-enquiry/:enquiry_no", async (req, res) => {
         } = req.body;
 
         const sql = `
-            UPDATE public.enquiry
+            UPDATE public.enquiries
             SET
                 enquiry_date = $1,
                 company_name = $2,
@@ -378,7 +378,7 @@ app.put("/update-enquiry/:enquiry_no", async (req, res) => {
 app.delete("/delete-enquiry/:enquiry_no", async (req, res) => {
     try {
         const sql = `
-            DELETE FROM public.enquiry
+            DELETE FROM public.enquiries
             WHERE enquiry_no = $1
             RETURNING *
         `;
@@ -518,6 +518,7 @@ app.post("/save-quotation", async (req, res) => {
     }
 });
 
+// UPDATE QUOTATION
 app.put("/update-quotation/:quotation_no", async (req, res) => {
     try {
         const { quotation_no } = req.params;
@@ -531,8 +532,13 @@ app.put("/update-quotation/:quotation_no", async (req, res) => {
             gstin
         } = req.body;
 
-        if (!proposal_date || !status || !customer_name ||
-            !cust_contact || !cust_mail) {
+        if (
+            !proposal_date ||
+            !status ||
+            !customer_name ||
+            !cust_contact ||
+            !cust_mail
+        ) {
             return res.status(400).json({
                 success: false,
                 message: "Please fill all required fields."
@@ -587,6 +593,7 @@ app.put("/update-quotation/:quotation_no", async (req, res) => {
     }
 });
 
+// GET ONE QUOTATION
 app.get("/get-quotation/:quotation_no", async (req, res) => {
     try {
         const { quotation_no } = req.params;
@@ -627,10 +634,8 @@ app.get("/get-quotation/:quotation_no", async (req, res) => {
         });
     }
 });
-// ==========================================
-// DELETE QUOTATION
-// ==========================================
 
+// DELETE QUOTATION
 app.delete("/delete-quotation/:quotation_no", async (req, res) => {
     try {
         const { quotation_no } = req.params;
@@ -666,17 +671,29 @@ app.delete("/delete-quotation/:quotation_no", async (req, res) => {
     }
 });
 
-
-// ==========================================
-// START SERVER
 // ==========================================
 // TEST QUOTATION ROUTE
+// ==========================================
+
 app.get("/test-quotation", (req, res) => {
     res.send("Quotation route is working!");
 });
-app.listen(PORT, () => {
-    console.log("================================");
-    console.log("Server running successfully!");
-    console.log(`URL: http://localhost:${PORT}`);
-    console.log("================================");
-});
+
+// ==========================================
+// EXPORT APP FOR VERCEL
+// ==========================================
+
+module.exports = app;
+
+// ==========================================
+// START SERVER LOCALLY
+// ==========================================
+
+if (require.main === module) {
+    app.listen(PORT, () => {
+        console.log("================================");
+        console.log("Server running successfully!");
+        console.log(`URL: http://localhost:${PORT}`);
+        console.log("================================");
+    });
+}
