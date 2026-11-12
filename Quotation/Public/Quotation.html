@@ -1,0 +1,93 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Quotation</title>
+</head>
+
+<body>
+
+    <center>
+        <h3>Create Quotation</h3>
+
+        <form id="quotationForm">
+
+            <table>
+                <tr>
+                    <td>Quotation Number:</td>
+                    <td>
+                        <input type="text" id="quotationNo"
+                        placeholder="Enter Quotation Number" required>
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>Proposal Date:</td>
+                    <td>
+                        <input type="date" id="proposalDate" required>
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>Status:</td>
+                    <td>
+                        <select id="quotationStatus" required>
+                            <option value="">Select Status</option>
+                            <option value="APPROVED">APPROVED</option>
+                            <option value="NOT APPROVED">NOT APPROVED</option>
+                            <option value="PENDING">PENDING</option>
+                        </select>
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>Customer:</td>
+                    <td>
+                        <input type="text" id="quotationCustomer"
+                        placeholder="Enter Customer" required>
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>Customer Contact:</td>
+                    <td>
+                        <input type="text" id="quotationContact"
+                        placeholder="Enter Contact Number" required>
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>Customer Mail:</td>
+                    <td>
+                        <input type="email" id="quotationMail"
+                        placeholder="Enter Email" required>
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>GSTIN:</td>
+                    <td>
+                        <input type="text" id="quotationGSTIN"
+                        placeholder="Enter GSTIN">
+                    </td>
+                </tr>
+            </table>
+
+            <br>
+
+            <button type="submit">Save Quotation</button>
+
+            <button type="button"
+            onclick="window.location.href='/quotation'">
+                Back
+            </button>
+
+        </form>
+    </center>
+
+    <script src="/quotation-assets/Quotation.js"></script>
+
+</body>
+</html>

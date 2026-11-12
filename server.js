@@ -27,14 +27,39 @@ app.use(express.urlencoded({ extended: true }));
 
 const indexFile = path.join(__dirname, "Index.html");
 
-const publicFolder = path.join(
+// ENQUIRY FILES
+const enquiryPublicFolder = path.join(
     __dirname,
     "Enquiry",
     "Public"
 );
 
-const enquiryListFile = path.join(publicFolder, "EnquiryList.html");
-const enquiryFile = path.join(publicFolder, "Enquiry.html");
+const enquiryListFile = path.join(
+    enquiryPublicFolder,
+    "EnquiryList.html"
+);
+
+const enquiryFile = path.join(
+    enquiryPublicFolder,
+    "Enquiry.html"
+);
+
+// QUOTATION FILES
+const quotationPublicFolder = path.join(
+    __dirname,
+    "Quotation",
+    "Public"
+);
+
+const quotationListFile = path.join(
+    quotationPublicFolder,
+    "QuotationList.html"
+);
+
+const quotationFile = path.join(
+    quotationPublicFolder,
+    "Quotation.html"
+);
 
 // ==========================================
 // CHECK FILES
@@ -42,17 +67,51 @@ const enquiryFile = path.join(publicFolder, "Enquiry.html");
 
 console.log("================================");
 console.log("PROJECT LOCATION:", __dirname);
+
 console.log("INDEX EXISTS:", fs.existsSync(indexFile));
-console.log("PUBLIC FOLDER EXISTS:", fs.existsSync(publicFolder));
-console.log("ENQUIRY LIST EXISTS:", fs.existsSync(enquiryListFile));
-console.log("CREATE ENQUIRY EXISTS:", fs.existsSync(enquiryFile));
+
+console.log(
+    "ENQUIRY FOLDER EXISTS:",
+    fs.existsSync(enquiryPublicFolder)
+);
+
+console.log(
+    "ENQUIRY LIST EXISTS:",
+    fs.existsSync(enquiryListFile)
+);
+
+console.log(
+    "CREATE ENQUIRY EXISTS:",
+    fs.existsSync(enquiryFile)
+);
+
+console.log(
+    "QUOTATION FOLDER EXISTS:",
+    fs.existsSync(quotationPublicFolder)
+);
+
+console.log(
+    "QUOTATION LIST EXISTS:",
+    fs.existsSync(quotationListFile)
+);
+
+console.log(
+    "CREATE QUOTATION EXISTS:",
+    fs.existsSync(quotationFile)
+);
+
 console.log("================================");
 
 // ==========================================
 // SERVE FRONTEND FILES
 // ==========================================
 
-app.use(express.static(publicFolder));
+app.use(express.static(enquiryPublicFolder));
+
+app.use(
+    "/quotation-assets",
+    express.static(quotationPublicFolder)
+);
 
 // ==========================================
 // HOME PAGE
@@ -64,41 +123,59 @@ app.get("/", (req, res) => {
 });
 
 // ==========================================
-// ENQUIRY LIST PAGE
+// ENQUIRY PAGE ROUTES
 // ==========================================
 
+// ENQUIRY LIST
 app.get("/enquiry", (req, res) => {
     console.log("ENQUIRY LIST ROUTE CALLED");
     res.sendFile(enquiryListFile);
 });
 
-// ==========================================
-// CREATE ENQUIRY PAGE
-// ==========================================
-
+// CREATE ENQUIRY
 app.get("/create-enquiry", (req, res) => {
     console.log("CREATE ENQUIRY ROUTE CALLED");
     res.sendFile(enquiryFile);
 });
 
 // ==========================================
-// TEST DATABASE
+// QUOTATION PAGE ROUTES
+// ==========================================
+
+// QUOTATION LIST
+app.get("/quotation", (req, res) => {
+    console.log("QUOTATION LIST ROUTE CALLED");
+    res.sendFile(quotationListFile);
+});
+
+// CREATE QUOTATION
+app.get("/create-quotation", (req, res) => {
+    console.log("CREATE QUOTATION ROUTE CALLED");
+    res.sendFile(quotationFile);
+});
+
+// ==========================================
+// TEST DATABASE CONNECTION
 // ==========================================
 
 app.get("/test-db", async (req, res) => {
     try {
         await pool.query("SELECT 1");
+
         res.send("PostgreSQL connected successfully!");
+
     } catch (error) {
         console.error("Database Error:", error);
+
         res.status(500).send(error.message);
     }
 });
 
 // ==========================================
-// GET ALL ENQUIRIES
+// ENQUIRY MODULE
 // ==========================================
 
+// GET ALL ENQUIRIES
 app.get("/get-enquiries", async (req, res) => {
     try {
         const sql = `
@@ -130,10 +207,7 @@ app.get("/get-enquiries", async (req, res) => {
     }
 });
 
-// ==========================================
 // GET ONE ENQUIRY
-// ==========================================
-
 app.get("/get-enquiry/:enquiry_no", async (req, res) => {
     try {
         const sql = `
@@ -175,10 +249,7 @@ app.get("/get-enquiry/:enquiry_no", async (req, res) => {
     }
 });
 
-// ==========================================
 // SAVE ENQUIRY
-// ==========================================
-
 app.post("/save-enquiry", async (req, res) => {
     try {
         const {
@@ -239,15 +310,14 @@ app.post("/save-enquiry", async (req, res) => {
 
         res.status(500).json({
             success: false,
-            message: error.message
+            message: error.code === "23505"
+                ? "Enquiry number already exists."
+                : error.message
         });
     }
 });
 
-// ==========================================
 // UPDATE ENQUIRY
-// ==========================================
-
 app.put("/update-enquiry/:enquiry_no", async (req, res) => {
     try {
         const {
@@ -304,10 +374,7 @@ app.put("/update-enquiry/:enquiry_no", async (req, res) => {
     }
 });
 
-// ==========================================
 // DELETE ENQUIRY
-// ==========================================
-
 app.delete("/delete-enquiry/:enquiry_no", async (req, res) => {
     try {
         const sql = `
@@ -344,9 +411,269 @@ app.delete("/delete-enquiry/:enquiry_no", async (req, res) => {
 });
 
 // ==========================================
-// START SERVER
+// QUOTATION MODULE
 // ==========================================
 
+// GET ALL QUOTATIONS
+app.get("/get-quotations", async (req, res) => {
+    try {
+        const sql = `
+            SELECT
+                quotation_no,
+                TO_CHAR(proposal_date, 'YYYY-MM-DD') AS proposal_date,
+                status,
+                customer_name,
+                cust_contact,
+                cust_mail,
+                gstin
+            FROM public.quotation
+            ORDER BY quotation_no DESC
+        `;
+
+        const result = await pool.query(sql);
+
+        res.json({
+            success: true,
+            data: result.rows
+        });
+
+    } catch (error) {
+        console.error("Get Quotations Error:", error);
+
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+});
+
+// SAVE QUOTATION
+app.post("/save-quotation", async (req, res) => {
+    try {
+        const {
+            quotation_no,
+            proposal_date,
+            status,
+            customer_name,
+            cust_contact,
+            cust_mail,
+            gstin
+        } = req.body;
+
+        if (
+            !quotation_no ||
+            !proposal_date ||
+            !status ||
+            !customer_name ||
+            !cust_contact ||
+            !cust_mail
+        ) {
+            return res.status(400).json({
+                success: false,
+                message: "Please fill all required fields."
+            });
+        }
+
+        const sql = `
+            INSERT INTO public.quotation (
+                quotation_no,
+                proposal_date,
+                status,
+                customer_name,
+                cust_contact,
+                cust_mail,
+                gstin
+            )
+            VALUES ($1, $2, $3, $4, $5, $6, $7)
+            RETURNING *
+        `;
+
+        const values = [
+            quotation_no,
+            proposal_date,
+            status,
+            customer_name,
+            cust_contact,
+            cust_mail,
+            gstin || null
+        ];
+
+        const result = await pool.query(sql, values);
+
+        res.status(201).json({
+            success: true,
+            message: "Quotation saved successfully!",
+            data: result.rows[0]
+        });
+
+    } catch (error) {
+        console.error("Save Quotation Error:", error);
+
+        res.status(500).json({
+            success: false,
+            message: error.code === "23505"
+                ? "Quotation number already exists."
+                : error.message
+        });
+    }
+});
+
+app.put("/update-quotation/:quotation_no", async (req, res) => {
+    try {
+        const { quotation_no } = req.params;
+
+        const {
+            proposal_date,
+            status,
+            customer_name,
+            cust_contact,
+            cust_mail,
+            gstin
+        } = req.body;
+
+        if (!proposal_date || !status || !customer_name ||
+            !cust_contact || !cust_mail) {
+            return res.status(400).json({
+                success: false,
+                message: "Please fill all required fields."
+            });
+        }
+
+        const sql = `
+            UPDATE public.quotation
+            SET
+                proposal_date = $1,
+                status = $2,
+                customer_name = $3,
+                cust_contact = $4,
+                cust_mail = $5,
+                gstin = $6
+            WHERE quotation_no = $7
+            RETURNING *
+        `;
+
+        const values = [
+            proposal_date,
+            status,
+            customer_name,
+            cust_contact,
+            cust_mail,
+            gstin || null,
+            quotation_no
+        ];
+
+        const result = await pool.query(sql, values);
+
+        if (result.rowCount === 0) {
+            return res.status(404).json({
+                success: false,
+                message: "Quotation not found."
+            });
+        }
+
+        res.json({
+            success: true,
+            message: "Quotation updated successfully!",
+            data: result.rows[0]
+        });
+
+    } catch (error) {
+        console.error("Update Quotation Error:", error);
+
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+});
+
+app.get("/get-quotation/:quotation_no", async (req, res) => {
+    try {
+        const { quotation_no } = req.params;
+
+        const sql = `
+            SELECT
+                quotation_no,
+                TO_CHAR(proposal_date, 'YYYY-MM-DD') AS proposal_date,
+                status,
+                customer_name,
+                cust_contact,
+                cust_mail,
+                gstin
+            FROM public.quotation
+            WHERE quotation_no = $1
+        `;
+
+        const result = await pool.query(sql, [quotation_no]);
+
+        if (result.rowCount === 0) {
+            return res.status(404).json({
+                success: false,
+                message: "Quotation not found."
+            });
+        }
+
+        res.json({
+            success: true,
+            data: result.rows[0]
+        });
+
+    } catch (error) {
+        console.error("Get Single Quotation Error:", error);
+
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+});
+// ==========================================
+// DELETE QUOTATION
+// ==========================================
+
+app.delete("/delete-quotation/:quotation_no", async (req, res) => {
+    try {
+        const { quotation_no } = req.params;
+
+        const sql = `
+            DELETE FROM public.quotation
+            WHERE quotation_no = $1
+            RETURNING quotation_no
+        `;
+
+        const result = await pool.query(sql, [quotation_no]);
+
+        if (result.rowCount === 0) {
+            return res.status(404).json({
+                success: false,
+                message: "Quotation not found."
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: "Quotation deleted successfully!",
+            data: result.rows[0]
+        });
+
+    } catch (error) {
+        console.error("Delete Quotation Error:", error);
+
+        return res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+});
+
+
+// ==========================================
+// START SERVER
+// ==========================================
+// TEST QUOTATION ROUTE
+app.get("/test-quotation", (req, res) => {
+    res.send("Quotation route is working!");
+});
 app.listen(PORT, () => {
     console.log("================================");
     console.log("Server running successfully!");
