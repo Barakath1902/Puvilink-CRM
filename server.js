@@ -61,6 +61,25 @@ const quotationFile = path.join(
     "Quotation.html"
 );
 
+
+// INVOICE FILES
+const invoicePublicFolder = path.join(
+    __dirname,
+    "Invoice",
+    "Public"
+);
+
+const invoiceListFile = path.join(
+    invoicePublicFolder,
+    "InvoiceList.html"
+);
+
+const invoiceFile = path.join(
+    invoicePublicFolder,
+    "Invoice.html"
+);
+
+
 // ==========================================
 // CHECK FILES
 // ==========================================
@@ -100,6 +119,21 @@ console.log(
     fs.existsSync(quotationFile)
 );
 
+console.log(
+    "INVOICE FOLDER EXISTS:",
+    fs.existsSync(invoicePublicFolder)
+);
+
+console.log(
+    "INVOICE LIST EXISTS:",
+    fs.existsSync(invoiceListFile)
+);
+
+console.log(
+    "CREATE INVOICE EXISTS:",
+    fs.existsSync(invoiceFile)
+);
+
 console.log("================================");
 
 // ==========================================
@@ -111,6 +145,11 @@ app.use(express.static(enquiryPublicFolder));
 app.use(
     "/quotation-assets",
     express.static(quotationPublicFolder)
+);
+
+app.use(
+    "/invoice-assets",
+    express.static(invoicePublicFolder)
 );
 
 // ==========================================
@@ -173,6 +212,29 @@ app.get("/debug-db", (req, res) => {
         databaseHost: databaseHost,
         connectionFile: require.resolve("./db")
     });
+});
+
+
+ // ==========================================
+ // INVOICE PAGE ROUTES
+ // ==========================================
+
+// INVOICE LIST
+app.get("/invoice", (req, res) => {
+    console.log("INVOICE LIST ROUTE CALLED");
+    res.sendFile(invoiceListFile);
+});
+
+// CREATE INVOICE
+app.get("/create-invoice", (req, res) => {
+    console.log("CREATE INVOICE ROUTE CALLED");
+    res.sendFile(invoiceFile);
+});
+
+// DIRECT INVOICE HTML ACCESS
+app.get("/Invoice.html", (req, res) => {
+    console.log("DIRECT INVOICE HTML ROUTE CALLED");
+    res.sendFile(invoiceFile);
 });
 
 
@@ -691,6 +753,263 @@ app.delete("/delete-quotation/:quotation_no", async (req, res) => {
             message: error.message
         });
     }
+});
+
+
+ // ==========================================
+ // INVOICE MODULE
+ // ==========================================
+
+// GET ALL INVOICES
+app.get("/get-invoices", async (req, res) => {
+    try {
+        const sql = `
+            SELECT
+                invoice_no,
+                TO_CHAR(invoice_date, 'YYYY-MM-DD') AS invoice_date,
+                customer_name,
+                cust_contact,
+                cust_mail,
+                gstin
+            FROM public.invoice
+            ORDER BY invoice_no DESC
+        `;
+
+        const result = await pool.query(sql);
+
+        res.json({
+            success: true,
+            data: result.rows
+        });
+
+    } catch (error) {
+        console.error("Get Invoices Error:", error);
+
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+});
+
+// GET ONE INVOICE
+app.get("/get-invoice/:invoice_no", async (req, res) => {
+    try {
+        const sql = `
+            SELECT
+                invoice_no,
+                TO_CHAR(invoice_date, 'YYYY-MM-DD') AS invoice_date,
+                customer_name,
+                cust_contact,
+                cust_mail,
+                gstin
+            FROM public.invoice
+            WHERE invoice_no = $1
+        `;
+
+        const result = await pool.query(
+            sql,
+            [req.params.invoice_no]
+        );
+
+        if (result.rowCount === 0) {
+            return res.status(404).json({
+                success: false,
+                message: "Invoice not found."
+            });
+        }
+
+        res.json({
+            success: true,
+            data: result.rows[0]
+        });
+
+    } catch (error) {
+        console.error("Get Invoice Error:", error);
+
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+});
+
+// SAVE INVOICE
+app.post("/save-invoice", async (req, res) => {
+    try {
+        const {
+            invoice_no,
+            invoice_date,
+            customer_name,
+            cust_contact,
+            cust_mail,
+            gstin
+        } = req.body;
+
+        if (
+            !invoice_no ||
+            !invoice_date ||
+            !customer_name ||
+            !cust_contact ||
+            !cust_mail
+        ) {
+            return res.status(400).json({
+                success: false,
+                message: "Please fill all required fields."
+            });
+        }
+
+        const sql = `
+            INSERT INTO public.invoice (
+                invoice_no,
+                invoice_date,
+                customer_name,
+                cust_contact,
+                cust_mail,
+                gstin
+            )
+            VALUES ($1, $2, $3, $4, $5, $6)
+            RETURNING *
+        `;
+
+        const values = [
+            invoice_no,
+            invoice_date,
+            customer_name,
+            cust_contact,
+            cust_mail,
+            gstin || null
+        ];
+
+        const result = await pool.query(sql, values);
+
+        res.status(201).json({
+            success: true,
+            message: "Invoice saved successfully!",
+            data: result.rows[0]
+        });
+
+    } catch (error) {
+        console.error("Save Invoice Error:", error);
+
+        res.status(500).json({
+            success: false,
+            message: error.code === "23505"
+                ? "Invoice number already exists."
+                : error.message
+        });
+    }
+});
+
+// UPDATE INVOICE
+app.put("/update-invoice/:invoice_no", async (req, res) => {
+    try {
+        const {
+            invoice_date,
+            customer_name,
+            cust_contact,
+            cust_mail,
+            gstin
+        } = req.body;
+
+        if (
+            !invoice_date ||
+            !customer_name ||
+            !cust_contact ||
+            !cust_mail
+        ) {
+            return res.status(400).json({
+                success: false,
+                message: "Please fill all required fields."
+            });
+        }
+
+        const sql = `
+            UPDATE public.invoice
+            SET
+                invoice_date = $1,
+                customer_name = $2,
+                cust_contact = $3,
+                cust_mail = $4,
+                gstin = $5
+            WHERE invoice_no = $6
+            RETURNING *
+        `;
+
+        const values = [
+            invoice_date,
+            customer_name,
+            cust_contact,
+            cust_mail,
+            gstin || null,
+            req.params.invoice_no
+        ];
+
+        const result = await pool.query(sql, values);
+
+        if (result.rowCount === 0) {
+            return res.status(404).json({
+                success: false,
+                message: "Invoice not found."
+            });
+        }
+
+        res.json({
+            success: true,
+            message: "Invoice updated successfully!",
+            data: result.rows[0]
+        });
+
+    } catch (error) {
+        console.error("Update Invoice Error:", error);
+
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+});
+
+// DELETE INVOICE
+app.delete("/delete-invoice/:invoice_no", async (req, res) => {
+    try {
+        const sql = `
+            DELETE FROM public.invoice
+            WHERE invoice_no = $1
+            RETURNING invoice_no
+        `;
+
+        const result = await pool.query(
+            sql,
+            [req.params.invoice_no]
+        );
+
+        if (result.rowCount === 0) {
+            return res.status(404).json({
+                success: false,
+                message: "Invoice not found."
+            });
+        }
+
+        res.json({
+            success: true,
+            message: "Invoice deleted successfully!",
+            data: result.rows[0]
+        });
+
+    } catch (error) {
+        console.error("Delete Invoice Error:", error);
+
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+});
+
+// TEST INVOICE ROUTE
+app.get("/test-invoice", (req, res) => {
+    res.send("Invoice route is working!");
 });
 
 // ==========================================

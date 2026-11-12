@@ -1,0 +1,46 @@
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoice List</title>
+</head>
+
+<body>
+
+    <h2>Invoice List</h2>
+
+    <button onclick="window.location.href='/'">
+        Back to Home
+    </button>
+
+    <button onclick="window.location.href='/create-invoice'">
+        Create Invoice
+    </button>
+
+    <br><br>
+
+    <table border="1" cellpadding="8">
+
+        <thead>
+            <tr>
+                <th>Invoice No</th>
+                <th>Invoice Date</th>
+                <th>Customer Name</th>
+                <th>Customer Contact</th>
+                <th>Customer Mail</th>
+                <th>GSTIN</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+
+        <tbody id="invoiceTableBody"></tbody>
+
+    </table>
+
+    <script src="/invoice-assets/InvoiceList.js"></script>
+
+</body>
+</html>
