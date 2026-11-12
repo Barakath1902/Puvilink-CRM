@@ -1,0 +1,85 @@
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Customer</title>
+</head>
+
+<body>
+
+    <center>
+        <h3>Create Customer</h3>
+
+        <form id="customerForm">
+
+            <table>
+
+                <tr>
+                    <td>Customer Code:</td>
+                    <td>
+                        <input type="text" id="customerCode"
+                            placeholder="Enter Customer Code" required>
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>Customer Type:</td>
+                    <td>
+                        <input type="text" id="customerType"
+                            placeholder="Enter Customer Type" required>
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>Customer Name:</td>
+                    <td>
+                        <input type="text" id="customerName"
+                            placeholder="Enter Customer Name" required>
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>Customer Contact:</td>
+                    <td>
+                        <input type="text" id="customerContact"
+                            placeholder="Enter Contact Number" required>
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>Customer Mail:</td>
+                    <td>
+                        <input type="email" id="customerMail"
+                            placeholder="Enter Email" required>
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>GSTIN:</td>
+                    <td>
+                        <input type="text" id="customerGSTIN"
+                            placeholder="Enter GSTIN">
+                    </td>
+                </tr>
+
+            </table>
+
+            <br>
+
+            <button type="submit">Save Customer</button>
+
+            <button type="button"
+                onclick="window.location.href='/customer'">
+                Back
+            </button>
+
+        </form>
+    </center>
+
+    <script src="/customer-assets/Customer.js"></script>
+
+</body>
+</html>

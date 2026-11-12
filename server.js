@@ -79,6 +79,23 @@ const invoiceFile = path.join(
     "Invoice.html"
 );
 
+// CUSTOMER FILES
+const customerPublicFolder = path.join(
+    __dirname,
+    "Customer",
+    "Public"
+);
+
+const customerListFile = path.join(
+    customerPublicFolder,
+    "CustomerList.html"
+);
+
+const customerFile = path.join(
+    customerPublicFolder,
+    "Customer.html"
+);
+
 
 // ==========================================
 // CHECK FILES
@@ -150,6 +167,11 @@ app.use(
 app.use(
     "/invoice-assets",
     express.static(invoicePublicFolder)
+);
+
+app.use(
+    "/customer-assets",
+    express.static(customerPublicFolder)
 );
 
 // ==========================================
@@ -235,6 +257,22 @@ app.get("/create-invoice", (req, res) => {
 app.get("/Invoice.html", (req, res) => {
     console.log("DIRECT INVOICE HTML ROUTE CALLED");
     res.sendFile(invoiceFile);
+});
+
+// ==========================================
+// CUSTOMER PAGE ROUTES
+// ==========================================
+
+// CUSTOMER LIST
+app.get("/customer", (req, res) => {
+    console.log("CUSTOMER LIST ROUTE CALLED");
+    res.sendFile(customerListFile);
+});
+
+// CREATE CUSTOMER
+app.get("/create-customer", (req, res) => {
+    console.log("CREATE CUSTOMER ROUTE CALLED");
+    res.sendFile(customerFile);
 });
 
 
@@ -1006,6 +1044,263 @@ app.delete("/delete-invoice/:invoice_no", async (req, res) => {
         });
     }
 });
+
+
+ // ==========================================
+ // CUSTOMER MODULE
+ // ==========================================
+
+// GET ALL CUSTOMERS
+app.get("/get-customers", async (req, res) => {
+    try {
+        const sql = `
+            SELECT
+                customer_code,
+                customer_type,
+                customer_name,
+                customer_contact,
+                customer_mail,
+                gstin
+            FROM public.customer
+            ORDER BY customer_code DESC
+        `;
+
+        const result = await pool.query(sql);
+
+        res.json({
+            success: true,
+            data: result.rows
+        });
+
+    } catch (error) {
+        console.error("Get Customers Error:", error);
+
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+});
+
+
+// GET ONE CUSTOMER
+app.get("/get-customer/:customer_code", async (req, res) => {
+    try {
+        const sql = `
+            SELECT
+                customer_code,
+                customer_type,
+                customer_name,
+                customer_contact,
+                customer_mail,
+                gstin
+            FROM public.customer
+            WHERE customer_code = $1
+        `;
+
+        const result = await pool.query(
+            sql,
+            [req.params.customer_code]
+        );
+
+        if (result.rowCount === 0) {
+            return res.status(404).json({
+                success: false,
+                message: "Customer not found."
+            });
+        }
+
+        res.json({
+            success: true,
+            data: result.rows[0]
+        });
+
+    } catch (error) {
+        console.error("Get Customer Error:", error);
+
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+});
+
+
+// SAVE CUSTOMER
+app.post("/save-customer", async (req, res) => {
+    try {
+        const {
+            customer_code,
+            customer_type,
+            customer_name,
+            customer_contact,
+            customer_mail,
+            gstin
+        } = req.body;
+
+        if (
+            !customer_code ||
+            !customer_type ||
+            !customer_name ||
+            !customer_contact ||
+            !customer_mail
+        ) {
+            return res.status(400).json({
+                success: false,
+                message: "Please fill all required fields."
+            });
+        }
+
+        const sql = `
+            INSERT INTO public.customer (
+                customer_code,
+                customer_type,
+                customer_name,
+                customer_contact,
+                customer_mail,
+                gstin
+            )
+            VALUES ($1, $2, $3, $4, $5, $6)
+            RETURNING *
+        `;
+
+        const values = [
+            customer_code,
+            customer_type,
+            customer_name,
+            customer_contact,
+            customer_mail,
+            gstin || null
+        ];
+
+        const result = await pool.query(sql, values);
+
+        res.status(201).json({
+            success: true,
+            message: "Customer saved successfully!",
+            data: result.rows[0]
+        });
+
+    } catch (error) {
+        console.error("Save Customer Error:", error);
+
+        res.status(500).json({
+            success: false,
+            message: error.code === "23505"
+                ? "Customer code already exists."
+                : error.message
+        });
+    }
+});
+
+
+// UPDATE CUSTOMER
+app.put("/update-customer/:customer_code", async (req, res) => {
+    try {
+        const {
+            customer_type,
+            customer_name,
+            customer_contact,
+            customer_mail,
+            gstin
+        } = req.body;
+
+        if (
+            !customer_type ||
+            !customer_name ||
+            !customer_contact ||
+            !customer_mail
+        ) {
+            return res.status(400).json({
+                success: false,
+                message: "Please fill all required fields."
+            });
+        }
+
+        const sql = `
+            UPDATE public.customer
+            SET
+                customer_type = $1,
+                customer_name = $2,
+                customer_contact = $3,
+                customer_mail = $4,
+                gstin = $5
+            WHERE customer_code = $6
+            RETURNING *
+        `;
+
+        const values = [
+            customer_type,
+            customer_name,
+            customer_contact,
+            customer_mail,
+            gstin || null,
+            req.params.customer_code
+        ];
+
+        const result = await pool.query(sql, values);
+
+        if (result.rowCount === 0) {
+            return res.status(404).json({
+                success: false,
+                message: "Customer not found."
+            });
+        }
+
+        res.json({
+            success: true,
+            message: "Customer updated successfully!",
+            data: result.rows[0]
+        });
+
+    } catch (error) {
+        console.error("Update Customer Error:", error);
+
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+});
+
+
+// DELETE CUSTOMER
+app.delete("/delete-customer/:customer_code", async (req, res) => {
+    try {
+        const sql = `
+            DELETE FROM public.customer
+            WHERE customer_code = $1
+            RETURNING customer_code
+        `;
+
+        const result = await pool.query(
+            sql,
+            [req.params.customer_code]
+        );
+
+        if (result.rowCount === 0) {
+            return res.status(404).json({
+                success: false,
+                message: "Customer not found."
+            });
+        }
+
+        res.json({
+            success: true,
+            message: "Customer deleted successfully!",
+            data: result.rows[0]
+        });
+
+    } catch (error) {
+        console.error("Delete Customer Error:", error);
+
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+});
+
 
 // TEST INVOICE ROUTE
 app.get("/test-invoice", (req, res) => {
