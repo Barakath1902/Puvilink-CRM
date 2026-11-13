@@ -1,11 +1,115 @@
-
 const express = require("express");
 const path = require("path");
 const fs = require("fs");
+const crypto = require("crypto");
 const pool = require("./db");
 
 const app = express();
 const PORT = 3000;
+
+
+// ==========================================
+// LOGIN SESSION FUNCTIONS
+// ==========================================
+
+const SESSION_COOKIE = "app_session";
+
+function createSessionToken(userId) {
+
+    const payload = {
+        userId: userId,
+        expiresAt: Date.now() + (8 * 60 * 60 * 1000)
+    };
+
+    const encodedPayload = Buffer
+        .from(JSON.stringify(payload))
+        .toString("base64url");
+
+    const signature = crypto
+        .createHmac("sha256", process.env.SESSION_SECRET)
+        .update(encodedPayload)
+        .digest("hex");
+
+    return encodedPayload + "." + signature;
+}
+
+
+// VERIFY SESSION TOKEN
+function verifySessionToken(token) {
+
+    try {
+
+        const parts = token.split(".");
+
+        if (parts.length !== 2) {
+            return null;
+        }
+
+        const [encodedPayload, signature] = parts;
+
+        if (!/^[a-f0-9]{64}$/i.test(signature)) {
+            return null;
+        }
+
+        const expectedSignature = crypto
+            .createHmac("sha256", process.env.SESSION_SECRET)
+            .update(encodedPayload)
+            .digest("hex");
+
+        const signatureBuffer = Buffer.from(signature, "hex");
+        const expectedBuffer = Buffer.from(expectedSignature, "hex");
+
+        if (
+            !crypto.timingSafeEqual(
+                signatureBuffer,
+                expectedBuffer
+            )
+        ) {
+            return null;
+        }
+
+        const payload = JSON.parse(
+            Buffer.from(encodedPayload, "base64url").toString()
+        );
+
+        if (
+            !payload.userId ||
+            payload.expiresAt < Date.now()
+        ) {
+            return null;
+        }
+
+        return payload;
+
+    } catch (error) {
+
+        return null;
+
+    }
+
+}
+
+
+// READ LOGIN COOKIE
+function getSessionToken(req) {
+
+    const cookies = req.headers.cookie || "";
+
+    const sessionCookie = cookies
+        .split(";")
+        .map(cookie => cookie.trim())
+        .find(cookie => cookie.startsWith(SESSION_COOKIE + "="));
+
+    if (!sessionCookie) {
+        return null;
+    }
+
+    return sessionCookie.substring(
+        SESSION_COOKIE.length + 1
+    );
+
+}
+
 
 // ==========================================
 // SERVER IDENTIFICATION
@@ -26,6 +130,12 @@ app.use(express.urlencoded({ extended: true }));
 // ==========================================
 
 const indexFile = path.join(__dirname, "Index.html");
+
+// LOGIN FILE
+const loginFile = path.join(
+    __dirname,
+    "Login.html"
+);
 
 // ENQUIRY FILES
 const enquiryPublicFolder = path.join(
@@ -95,6 +205,129 @@ const customerFile = path.join(
     customerPublicFolder,
     "Customer.html"
 );
+
+
+ // ==========================================
+ // LOGIN AND LOGOUT ROUTES
+ // ==========================================
+
+ // SHOW LOGIN PAGE
+ app.get("/login", (req, res) => {
+     res.sendFile(loginFile);
+ });
+
+
+ // VALIDATE LOGIN
+ app.post("/login", (req, res) => {
+
+     const { userId, password } = req.body;
+
+     const validUserId = process.env.LOGIN_USER_ID;
+     const validPassword = process.env.LOGIN_PASSWORD;
+
+     if (
+         !validUserId ||
+         !validPassword ||
+         !process.env.SESSION_SECRET
+     ) {
+         return res.status(500).json({
+             success: false,
+             message: "Login configuration is missing."
+         });
+     }
+
+     const enteredUser = Buffer.from(String(userId || ""));
+     const correctUser = Buffer.from(validUserId);
+
+     const enteredPassword = Buffer.from(String(password || ""));
+     const correctPassword = Buffer.from(validPassword);
+
+     const userMatches =
+         enteredUser.length === correctUser.length &&
+         crypto.timingSafeEqual(enteredUser, correctUser);
+
+     const passwordMatches =
+         enteredPassword.length === correctPassword.length &&
+         crypto.timingSafeEqual(enteredPassword, correctPassword);
+
+     if (!userMatches || !passwordMatches) {
+         return res.status(401).json({
+             success: false,
+             message: "Invalid User ID or Password."
+         });
+     }
+
+     const token = createSessionToken(validUserId);
+
+     res.cookie(SESSION_COOKIE, token, {
+         httpOnly: true,
+         secure: process.env.NODE_ENV === "production",
+         sameSite: "strict",
+         maxAge: 8 * 60 * 60 * 1000,
+         path: "/"
+     });
+
+     res.json({
+         success: true,
+         message: "Login successful!"
+     });
+
+ });
+
+
+ // LOGOUT
+ app.get("/logout", (req, res) => {
+
+     res.clearCookie(SESSION_COOKIE, {
+         httpOnly: true,
+         secure: process.env.NODE_ENV === "production",
+         sameSite: "strict",
+         path: "/"
+     });
+
+     res.redirect("/login");
+
+ });
+
+
+ // ==========================================
+ // LOGIN PROTECTION
+ // ==========================================
+
+ app.use((req, res, next) => {
+
+     // Allow login page and login submission
+     if (
+         req.path === "/login" &&
+         (req.method === "GET" || req.method === "POST")
+     ) {
+         return next();
+     }
+
+     const token = getSessionToken(req);
+     const session = token ? verifySessionToken(token) : null;
+
+     if (!session) {
+
+         // Browser page requests go to Login Page
+         if (req.method === "GET" || req.method === "HEAD") {
+             return res.redirect("/login");
+         }
+
+         // API requests receive an authentication error
+         return res.status(401).json({
+             success: false,
+             message: "Please login to continue."
+         });
+
+     }
+
+     req.user = session;
+
+     next();
+
+ });
+
 
 
 // ==========================================
