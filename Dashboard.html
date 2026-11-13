@@ -1,0 +1,124 @@
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Dashboard Overview</title>
+</head>
+
+<body>
+
+    <h2>Dashboard Overview</h2>
+
+    <h3>Welcome to Puvilink CRM!</h3>
+
+    <p>
+        Manage your business activities and track your records
+        from one place.
+    </p>
+
+    <br>
+
+    <h3>Summary</h3>
+
+    <!-- DASHBOARD SUMMARY CARDS -->
+
+    <table width="100%" cellpadding="15" cellspacing="10" border="1">
+
+        <tr>
+
+            <!-- ENQUIRIES CARD -->
+            <td width="25%" border="1" align="center">
+
+                <h3>Total Enquiries</h3>
+
+                <h1 id="totalEnquiries">Loading...</h1>
+
+            </td>
+
+            <!-- QUOTATIONS CARD -->
+            <td width="25%" border="1" align="center">
+
+                <h3>Total Quotations</h3>
+
+                <h1 id="totalQuotations">Loading...</h1>
+
+            </td>
+
+            <!-- INVOICES CARD -->
+            <td width="25%" border="1" align="center">
+
+                <h3>Total Invoices</h3>
+
+                <h1 id="totalInvoices">Loading...</h1>
+
+            </td>
+
+            <!-- CUSTOMERS CARD -->
+            <td width="25%" border="1" align="center">
+
+                <h3>Total Customers</h3>
+
+                <h1 id="totalCustomers">Loading...</h1>
+
+            </td>
+
+        </tr>
+
+    </table>
+
+
+    <!-- DASHBOARD DATA SCRIPT -->
+
+    <script>
+
+        async function loadDashboardSummary() {
+
+            try {
+
+                const response = await fetch("/get-dashboard-summary");
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(
+                        result.message || "Unable to load dashboard summary"
+                    );
+                }
+
+                document.getElementById("totalEnquiries").textContent =
+                    result.data.enquiries;
+
+                document.getElementById("totalQuotations").textContent =
+                    result.data.quotations;
+
+                document.getElementById("totalInvoices").textContent =
+                    result.data.invoices;
+
+                document.getElementById("totalCustomers").textContent =
+                    result.data.customers;
+
+            } catch (error) {
+
+                console.error("Dashboard Error:", error);
+
+                document.getElementById("totalEnquiries").textContent = "Error";
+                document.getElementById("totalQuotations").textContent = "Error";
+                document.getElementById("totalInvoices").textContent = "Error";
+                document.getElementById("totalCustomers").textContent = "Error";
+
+            }
+
+        }
+
+        document.addEventListener("DOMContentLoaded", function () {
+            loadDashboardSummary();
+        });
+
+    </script>
+
+</body>
+
+</html>

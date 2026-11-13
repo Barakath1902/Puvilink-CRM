@@ -131,6 +131,12 @@ app.use(express.urlencoded({ extended: true }));
 
 const indexFile = path.join(__dirname, "Index.html");
 
+// DASHBOARD FILE
+const dashboardFile = path.join(
+    __dirname,
+    "Dashboard.html"
+);
+
 // LOGIN FILE
 const loginFile = path.join(
     __dirname,
@@ -406,6 +412,56 @@ app.use(
     "/customer-assets",
     express.static(customerPublicFolder)
 );
+
+// ==========================================
+// DASHBOARD PAGE
+// ==========================================
+
+app.get("/dashboard", (req, res) => {
+    console.log("DASHBOARD ROUTE CALLED");
+    res.sendFile(dashboardFile);
+});
+
+// ==========================================
+// DASHBOARD SUMMARY API
+// ==========================================
+
+app.get("/get-dashboard-summary", async (req, res) => {
+
+    try {
+
+        const sql = `
+            SELECT
+                (SELECT COUNT(*) FROM public.enquiries) AS enquiries,
+                (SELECT COUNT(*) FROM public.quotation) AS quotations,
+                (SELECT COUNT(*) FROM public.invoice) AS invoices,
+                (SELECT COUNT(*) FROM public.customer) AS customers
+        `;
+
+        const result = await pool.query(sql);
+
+        res.json({
+            success: true,
+            data: {
+                enquiries: Number(result.rows[0].enquiries),
+                quotations: Number(result.rows[0].quotations),
+                invoices: Number(result.rows[0].invoices),
+                customers: Number(result.rows[0].customers)
+            }
+        });
+
+    } catch (error) {
+
+        console.error("Dashboard Summary Error:", error);
+
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
+
+    }
+
+});
 
 // ==========================================
 // HOME PAGE

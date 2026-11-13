@@ -45,6 +45,8 @@ function createQuotationRow(quotation, tableBody) {
 
     const actionCell = document.createElement("td");
 
+    // Prevent buttons from appearing one below the other
+    actionCell.setAttribute("nowrap", "nowrap");
 
     // EDIT BUTTON
     const editButton = document.createElement("button");
@@ -103,8 +105,8 @@ function createQuotationRow(quotation, tableBody) {
 
     });
 
-
     actionCell.appendChild(editButton);
+    actionCell.appendChild(document.createTextNode(" "));
     actionCell.appendChild(deleteButton);
 
     row.appendChild(actionCell);

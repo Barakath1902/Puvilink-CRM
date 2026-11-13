@@ -1,64 +1,117 @@
 
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>CRM Dashboard</title>
+    <title>Puvilink CRM</title>
 </head>
 
 <body>
 
-    <!-- Logout Button on Right Side -->
-    <div style="text-align: right;">
-        <button onclick="window.location.href='/logout'">
-            Logout
-        </button>
-    </div>
+    <!-- TOP MAIN BAR -->
+    <table width="100%" border="1" cellpadding="10" cellspacing="0">
 
-    <!-- Dashboard Heading -->
-    <h2>CRM Dashboard</h2>
+        <tr>
+            <td>
+
+                <table width="100%" border="0" cellpadding="5">
+                    <tr>
+
+                        <td width="33%" align="left">
+                        </td>
+
+                        <td width="34%" align="center">
+                            <h1>Puvilink CRM</h1>
+                        </td>
+
+                        <td width="33%" align="right">
+                            <button onclick="window.location.href='/logout'">
+                                Logout
+                            </button>
+                        </td>
+
+                    </tr>
+                </table>
+
+            </td>
+        </tr>
+
+    </table>
 
     <br>
 
-    <!-- Modules -->
-    <tr>
-        <td>
-            <a href="/enquiry">
-                <button>Enquiry</button>
-            </a>
-            <br>
-        </td>
+    <!-- SIDEBAR AND MAIN CONTENT -->
+    <table width="100%" border="1" cellpadding="10" cellspacing="0">
 
-        <td>
-            <a href="/quotation">
-                <button>Quotation</button>
-            </a>
-            <br>
-        </td>
+        <tr>
 
-        <td>
-            <a href="/invoice">
-                <button>Invoice</button>
-            </a>
-            <br>
-        </td>
+            <!-- LEFT SIDEBAR -->
+            <td width="20%" valign="top">
 
-        <td>
-            <a href="Order.html">
-                <button>Order</button>
-            </a>
-            <br>
-        </td>
+                <h2>CRM Dashboard</h2>
 
-        <td>
-            <a href="/customer">
-                <button>Customer</button>
-            </a>
-            <br>
-        </td>
-    </tr>
+                <hr>
+
+                <p>
+                    <a href="/dashboard" target="moduleFrame">
+                        Dashboard
+                    </a>
+                </p>
+
+                <p>
+                    <a href="/enquiry" target="moduleFrame">
+                        Enquiry
+                    </a>
+                </p>
+
+                <p>
+                    <a href="/quotation" target="moduleFrame">
+                        Quotation
+                    </a>
+                </p>
+
+                <p>
+                    <a href="/invoice" target="moduleFrame">
+                        Invoice
+                    </a>
+                </p>
+
+                <p>
+                    <a href="/customer" target="moduleFrame">
+                        Customer
+                    </a>
+                </p>
+
+                <!--
+                <p>
+                    <a href="/order" target="moduleFrame">
+                        Order
+                    </a>
+                </p>
+                -->
+
+            </td>
+
+            <!-- RIGHT CONTENT AREA -->
+            <td width="80%" valign="top">
+
+                <iframe
+                    name="moduleFrame"
+                    src="/dashboard"
+                    width="100%"
+                    height="600"
+                    frameborder="0"
+                    title="CRM Module">
+                </iframe>
+
+            </td>
+
+        </tr>
+
+    </table>
 
 </body>
 
